@@ -37,6 +37,45 @@ then
     exit 1
 fi
 
+ensure_dev_venv () {
+    if [ ! -d ~/dev/venv ]
+    then
+        python3 -m venv --system-site-packages ~/dev/venv
+        VENV_ERROR=$?
+
+        if [ $VENV_ERROR -ne 0 ]
+        then
+            PY_MAJ_MIN=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+            echo -e "\e[1;34mInstalling missing venv package for python ${PY_MAJ_MIN}...\e[0m"
+
+            if ! sudo -A apt install -y "python${PY_MAJ_MIN}-venv" python3-venv python3-pip; then
+                sudo -A apt install -y python3-venv python3-pip
+            fi
+
+            python3 -m venv --system-site-packages ~/dev/venv
+        fi
+    fi
+
+    if [ ! -f ~/dev/venv/bin/activate ]
+    then
+        echo "Virtual environment setup failed: ~/dev/venv/bin/activate not found"
+        exit 1
+    fi
+
+    source ~/dev/venv/bin/activate
+
+    if ! command -v pip >/dev/null 2>&1
+    then
+        python3 -m ensurepip --upgrade >/dev/null 2>&1 || true
+    fi
+
+    if ! command -v pip >/dev/null 2>&1
+    then
+        echo "pip is still unavailable in ~/dev/venv after setup"
+        exit 1
+    fi
+}
+
 zenity --question --text="Install qtpyvcp or qtpyvcp and probe basic" --no-wrap --ok-label="QTPYVCP" --cancel-label="BOTH"
 
 BOTH=$?
@@ -70,16 +109,19 @@ then
         cd ~/dev
     fi
 
-    if [ ! -d ~/dev/venv ]
-    then
-        python3 -m venv --system-site-packages ~/dev/venv
-    fi
-    source ~/dev/venv/bin/activate
+    ensure_dev_venv
 
     pip install hiyapyco
 
     cd qtpyvcp
     pip install -e .
+
+    if ! command -v qcompile >/dev/null 2>&1 || ! command -v qnative >/dev/null 2>&1
+    then
+        echo "qcompile/qnative not found after qtpyvcp install"
+        exit 1
+    fi
+
     qcompile .
     find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
     qnative --build-root /tmp/qnative-build
@@ -139,16 +181,19 @@ else
         cd ~/dev
     fi
 
-    if [ ! -d ~/dev/venv ]
-    then
-        python3 -m venv --system-site-packages ~/dev/venv
-    fi
-    source ~/dev/venv/bin/activate
+    ensure_dev_venv
 
     pip install hiyapyco
 
     cd qtpyvcp
     pip install -e .
+
+    if ! command -v qcompile >/dev/null 2>&1 || ! command -v qnative >/dev/null 2>&1
+    then
+        echo "qcompile/qnative not found after qtpyvcp install"
+        exit 1
+    fi
+
     qcompile .
     find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
     qnative --build-root /tmp/qnative-build
