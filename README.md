@@ -1,52 +1,56 @@
 # qtpyvcp-trixie-installer
 
-Developer installer and updater for QtPyVCP on Debian Trixie using the `pyside6` branches.
+## General installation approach
 
-This repository is intended for contributors and local development, not end-user production deployment.
+This installer script sets up QtPyVCP and optional Probe Basic on Debian Trixie using the `pyside6` branches.
+It installs into a virtual environment at `~/Dev/venv` and keeps sources in `~/Dev`.
 
-## What It Sets Up
+## Installation steps
 
-- System-wide LinuxCNC prerequisite verification (with optional auto-install prompt for `linuxcnc-uspace` if missing)
-- A development virtual environment at `~/Dev/venv`
-- `qtpyvcp` cloned to `~/Dev/qtpyvcp` on branch `pyside6`
-- Optional `probe_basic` cloned to `~/Dev/probe_basic` on branch `pyside6`
-- Editable Python installs (`pip install -e .`)
-- Compiled Qt resources (`qcompile .`)
-- Native module build refresh (`qnative --build-root /tmp/qnative-build`)
+**1. Ensure LinuxCNC is installed system-wide.**
 
-## Scripts
+The installer checks this and can offer to install `linuxcnc-uspace` if missing.
+If LinuxCNC installation is skipped or fails, the installer exits.
 
-- `install_for_qtpyvcp.sh`
-	- Installs dependencies
-	- Bootstraps `zenity` and `git` if they are missing
-	- Requires LinuxCNC system-wide (offers to install `linuxcnc-uspace` when missing)
-	- Clones/updates repos on the `pyside6` branch
-	- Creates and activates `~/Dev/venv` (with auto-recovery for missing `pythonX.Y-venv`)
-	- Installs and compiles QtPyVCP (and optionally Probe Basic)
-
-- `updater.sh`
-	- Updates existing local repos to latest `pyside6`
-	- Re-runs compile steps
-	- Rebuilds native modules for QtPyVCP
-
-- `sudo_helper.sh`
-	- Askpass helper used by `sudo -A` for GUI password prompt via Zenity
-
-## Quick Start
+**2. Clone this installer repo into `~/Dev`.**
 
 ```bash
-chmod +x install_for_qtpyvcp.sh updater.sh sudo_helper.sh
+cd ~
+mkdir -p Dev
+cd Dev
+git clone https://github.com/Lcvette/qtpyvcp-trixie-installer.git
+cd qtpyvcp-trixie-installer
+```
+
+**3. Run the installer script.**
+
+```bash
 ./install_for_qtpyvcp.sh
 ```
 
-After initial setup:
+What the installer does:
+- Installs required dependencies for Trixie/PySide6
+- Bootstraps `git` and `zenity` if needed
+- Clones or updates `qtpyvcp` and optional `probe_basic` on `pyside6`
+- Creates `~/Dev/venv` with recovery for missing `pythonX.Y-venv`
+- Installs editable packages and runs `qcompile` and `qnative`
+
+## Updating
+
+From the installer repo directory:
 
 ```bash
 ./updater.sh
 ```
 
+This updates repositories, recompiles resources, and refreshes native modules.
+
+## Uninstall
+
+This is a local dev-style install. Remove the `~/Dev` workspace to remove the environment and cloned sources.
+
 ## Notes
 
-- Branch pinning is intentional: both repos are kept on `pyside6`.
-- If you switch machines/architectures or reuse old trees, rerun `./updater.sh` to refresh native artifacts.
-- If LinuxCNC install is cancelled or fails, the installer exits so setup does not continue in a broken state.
+- Branch pinning is intentional: `qtpyvcp` and `probe_basic` use `pyside6`.
+- If you switch machines/architectures or reuse old trees, rerun `./updater.sh`.
+- Scripts expected in this repo: `install_for_qtpyvcp.sh`, `updater.sh`, `sudo_helper.sh`.
