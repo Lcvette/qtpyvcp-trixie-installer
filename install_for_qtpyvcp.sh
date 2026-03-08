@@ -39,12 +39,12 @@ fi
 
 if ! command -v linuxcnc >/dev/null 2>&1 && ! dpkg -s linuxcnc-uspace >/dev/null 2>&1 && ! dpkg -s linuxcnc >/dev/null 2>&1
 then
-    echo "LinuxCNC does not appear to be installed on this system."
+    echo "LinuxCNC is required and does not appear to be installed system-wide."
 
     INSTALL_LINUXCNC=1
     if command -v zenity >/dev/null 2>&1
     then
-        if zenity --question --text="LinuxCNC is not installed. Install linuxcnc-uspace now?" --no-wrap --ok-label="INSTALL" --cancel-label="SKIP"
+        if zenity --question --text="LinuxCNC is required. Install linuxcnc-uspace now?" --no-wrap --ok-label="INSTALL" --cancel-label="CANCEL"
         then
             INSTALL_LINUXCNC=0
         fi
@@ -66,7 +66,9 @@ then
             exit 1
         fi
     else
-        echo "Continuing without LinuxCNC install (you can install it later)."
+        echo "LinuxCNC installation was skipped."
+        echo "Install LinuxCNC system-wide, then rerun this installer."
+        exit 1
     fi
 fi
 
