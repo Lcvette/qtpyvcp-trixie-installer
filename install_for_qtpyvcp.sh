@@ -3,8 +3,28 @@ set -euo pipefail
 
 export PATH="$HOME/.local/bin:$PATH"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
 USERNAME="$(whoami)"
+
+# Backward-compatible askpass behavior:
+# if sudo_helper.sh is missing, create a temporary helper so the installer still runs standalone.
+if [ -x "$SCRIPT_DIR/sudo_helper.sh" ]; then
+  export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
+else
+  SUDO_ASKPASS_FALLBACK="$(mktemp)"
+  cat > "$SUDO_ASKPASS_FALLBACK" <<'EOF'
+#!/bin/bash
+if command -v zenity >/dev/null 2>&1; then
+  zenity --password --title="SUDO Password"
+else
+  read -rsp "SUDO Password: " pass
+  echo
+  printf '%s\n' "$pass"
+fi
+EOF
+  chmod 700 "$SUDO_ASKPASS_FALLBACK"
+  export SUDO_ASKPASS="$SUDO_ASKPASS_FALLBACK"
+  trap 'rm -f "$SUDO_ASKPASS_FALLBACK"' EXIT
+fi
 
 # pyqt5 main branch and pyside6 branch install are intentionally separate installers.
 QTPYVCP_REPO="https://github.com/kcjengr/qtpyvcp.git"
