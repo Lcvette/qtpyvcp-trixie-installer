@@ -73,9 +73,9 @@ then
 fi
 
 ensure_dev_venv () {
-    if [ ! -d ~/dev/venv ]
+    if [ ! -d ~/Dev/venv ]
     then
-        python3 -m venv --system-site-packages ~/dev/venv
+        python3 -m venv --system-site-packages ~/Dev/venv
         VENV_ERROR=$?
 
         if [ $VENV_ERROR -ne 0 ]
@@ -87,17 +87,17 @@ ensure_dev_venv () {
                 sudo -A apt install -y python3-venv python3-pip
             fi
 
-            python3 -m venv --system-site-packages ~/dev/venv
+            python3 -m venv --system-site-packages ~/Dev/venv
         fi
     fi
 
-    if [ ! -f ~/dev/venv/bin/activate ]
+    if [ ! -f ~/Dev/venv/bin/activate ]
     then
-        echo "Virtual environment setup failed: ~/dev/venv/bin/activate not found"
+        echo "Virtual environment setup failed: ~/Dev/venv/bin/activate not found"
         exit 1
     fi
 
-    source ~/dev/venv/bin/activate
+    source ~/Dev/venv/bin/activate
 
     if ! command -v pip >/dev/null 2>&1
     then
@@ -106,7 +106,7 @@ ensure_dev_venv () {
 
     if ! command -v pip >/dev/null 2>&1
     then
-        echo "pip is still unavailable in ~/dev/venv after setup"
+        echo "pip is still unavailable in ~/Dev/venv after setup"
         exit 1
     fi
 }
@@ -119,29 +119,29 @@ if [ $BOTH -eq 1 ]
 then
     echo -e "\e[1;34mQtPyVCP and Probe Basic install started\e[0m"
 
-    mkdir -p ~/dev
-    cd ~/dev
+    mkdir -p ~/Dev
+    cd ~/Dev
 
-    if [ ! -d ~/dev/qtpyvcp/.git ]
+    if [ ! -d ~/Dev/qtpyvcp/.git ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
     else
-        cd ~/dev/qtpyvcp
+        cd ~/Dev/qtpyvcp
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd ~/Dev
     fi
 
-    if [ ! -d ~/dev/probe_basic/.git ]
+    if [ ! -d ~/Dev/probe_basic/.git ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/probe_basic.git
     else
-        cd ~/dev/probe_basic
+        cd ~/Dev/probe_basic
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd ~/Dev
     fi
 
     ensure_dev_venv
@@ -164,14 +164,14 @@ then
     find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
     qnative --build-root /tmp/qnative-build
     cp scripts/.xsessionrc ~/
-    cp -r ~/dev/qtpyvcp/linuxcnc ~/ || true
+    cp -r ~/Dev/qtpyvcp/linuxcnc ~/ || true
 
     cd ../probe_basic
     pip install -e .
     qcompile .
 
     mkdir -p ~/linuxcnc/configs
-    cp -r ~/dev/probe_basic/configs/probe_basic/ ~/linuxcnc/configs/ || true
+    cp -r ~/Dev/probe_basic/configs/probe_basic/ ~/linuxcnc/configs/ || true
 
     test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
 
@@ -199,24 +199,24 @@ then
     cp /home/$USERNAME/dev/probe_basic/dev_launchers/qtpyvcp2.png /home/$USERNAME/.local/share/icons/qtpyvcp.png
     cp /home/$USERNAME/dev/probe_basic/fonts/BebasKai.ttf /home/$USERNAME/.local/share/fonts/BebasKai.ttf || true
 
-    if ! grep -q 'source ~/dev/venv/bin/activate' ~/.bashrc; then
-        echo "source ~/dev/venv/bin/activate" >> ~/.bashrc
+    if ! grep -q 'source ~/Dev/venv/bin/activate' ~/.bashrc; then
+        echo "source ~/Dev/venv/bin/activate" >> ~/.bashrc
     fi
 
 else
     echo -e "\e[1;34mQtPyVCP install started\e[0m"
-    mkdir -p ~/dev
-    cd ~/dev
+    mkdir -p ~/Dev
+    cd ~/Dev
 
-    if [ ! -d ~/dev/qtpyvcp/.git ]
+    if [ ! -d ~/Dev/qtpyvcp/.git ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
     else
-        cd ~/dev/qtpyvcp
+        cd ~/Dev/qtpyvcp
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd ~/Dev
     fi
 
     ensure_dev_venv
@@ -240,8 +240,8 @@ else
     qnative --build-root /tmp/qnative-build
     cp scripts/.xsessionrc ~/
 
-    if ! grep -q 'source ~/dev/venv/bin/activate' ~/.bashrc; then
-        echo "source ~/dev/venv/bin/activate" >> ~/.bashrc
+    if ! grep -q 'source ~/Dev/venv/bin/activate' ~/.bashrc; then
+        echo "source ~/Dev/venv/bin/activate" >> ~/.bashrc
     fi
 fi
 

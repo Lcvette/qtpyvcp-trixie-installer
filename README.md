@@ -7,9 +7,9 @@ This repository is intended for contributors and local development, not end-user
 ## What It Sets Up
 
 - System-wide LinuxCNC prerequisite verification (with optional auto-install prompt for `linuxcnc-uspace` if missing)
-- A development virtual environment at `~/dev/venv`
-- `qtpyvcp` cloned to `~/dev/qtpyvcp` on branch `pyside6`
-- Optional `probe_basic` cloned to `~/dev/probe_basic` on branch `pyside6`
+- A development virtual environment at `~/Dev/venv`
+- `qtpyvcp` cloned to `~/Dev/qtpyvcp` on branch `pyside6`
+- Optional `probe_basic` cloned to `~/Dev/probe_basic` on branch `pyside6`
 - Editable Python installs (`pip install -e .`)
 - Compiled Qt resources (`qcompile .`)
 - Native module build refresh (`qnative --build-root /tmp/qnative-build`)
@@ -21,7 +21,7 @@ This repository is intended for contributors and local development, not end-user
 	- Bootstraps `zenity` and `git` if they are missing
 	- Requires LinuxCNC system-wide (offers to install `linuxcnc-uspace` when missing)
 	- Clones/updates repos on the `pyside6` branch
-	- Creates and activates `~/dev/venv` (with auto-recovery for missing `pythonX.Y-venv`)
+	- Creates and activates `~/Dev/venv` (with auto-recovery for missing `pythonX.Y-venv`)
 	- Installs and compiles QtPyVCP (and optionally Probe Basic)
 
 - `updater.sh`
