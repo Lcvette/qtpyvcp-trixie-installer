@@ -37,6 +37,19 @@ then
     exit 1
 fi
 
+if ! command -v linuxcnc >/dev/null 2>&1 && ! dpkg -s linuxcnc-uspace >/dev/null 2>&1 && ! dpkg -s linuxcnc >/dev/null 2>&1
+then
+    echo "LinuxCNC does not appear to be installed on this system."
+    echo "Install LinuxCNC first, then rerun this installer."
+
+    if command -v zenity >/dev/null 2>&1
+    then
+        zenity --error --text="LinuxCNC is not installed.\nInstall LinuxCNC first, then rerun this installer." --no-wrap
+    fi
+
+    exit 1
+fi
+
 ensure_dev_venv () {
     if [ ! -d ~/dev/venv ]
     then
