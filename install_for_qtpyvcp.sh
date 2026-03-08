@@ -40,14 +40,34 @@ fi
 if ! command -v linuxcnc >/dev/null 2>&1 && ! dpkg -s linuxcnc-uspace >/dev/null 2>&1 && ! dpkg -s linuxcnc >/dev/null 2>&1
 then
     echo "LinuxCNC does not appear to be installed on this system."
-    echo "Install LinuxCNC first, then rerun this installer."
 
+    INSTALL_LINUXCNC=1
     if command -v zenity >/dev/null 2>&1
     then
-        zenity --error --text="LinuxCNC is not installed.\nInstall LinuxCNC first, then rerun this installer." --no-wrap
+        if zenity --question --text="LinuxCNC is not installed. Install linuxcnc-uspace now?" --no-wrap --ok-label="INSTALL" --cancel-label="SKIP"
+        then
+            INSTALL_LINUXCNC=0
+        fi
+    else
+        read -r -p "Install linuxcnc-uspace now? [Y/n]: " REPLY
+        case "$REPLY" in
+            n|N) INSTALL_LINUXCNC=1 ;;
+            *) INSTALL_LINUXCNC=0 ;;
+        esac
     fi
 
-    exit 1
+    if [ $INSTALL_LINUXCNC -eq 0 ]
+    then
+        sudo -A apt update
+        if ! sudo -A apt install -y linuxcnc-uspace
+        then
+            echo "Unable to install linuxcnc-uspace automatically."
+            echo "Install LinuxCNC manually, then rerun this installer."
+            exit 1
+        fi
+    else
+        echo "Continuing without LinuxCNC install (you can install it later)."
+    fi
 fi
 
 ensure_dev_venv () {
