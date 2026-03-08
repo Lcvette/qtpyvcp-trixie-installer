@@ -17,6 +17,15 @@ echo -e "\e[1;34m                                                               
 echo -e "\e[1;34m        https://github.com/kcjengr/probe_basic   By @Lcvette  2026             \e[0m"
 echo -e "\e[1;34m                                                                               \e[0m"
 
+# Bootstrap required tools before askpass mode.
+# If zenity is missing, sudo -A cannot show the password dialog yet.
+if ! command -v zenity >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1
+then
+    echo -e "\e[1;34mInstalling required bootstrap packages (zenity, git)...\e[0m"
+    sudo apt update
+    sudo apt install -y zenity git
+fi
+
 echo -e "\e[1;34mDebian Trixie dependencies install started\e[0m"
 
 sudo -A apt update
