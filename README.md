@@ -12,7 +12,7 @@ It installs into a virtual environment at `~/Dev/venv` and keeps sources in `~/D
 The installer checks this and can offer to install `linuxcnc-uspace` if missing.
 If LinuxCNC installation is skipped or fails, the installer exits.
 
-**2. Clone this installer repo into `~/Dev`.**
+**2. Create Dev directory and Clone the installer repo.**
 
 ```bash
 cd ~
