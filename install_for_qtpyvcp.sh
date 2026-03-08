@@ -57,8 +57,11 @@ sudo -A apt install -y \
   python3-pyside6.qtquick
 
 printf "\n[qtpyvcp-trixie-installer] Choose install scope...\n"
-zenity --question --text="Install qtpyvcp only, or qtpyvcp + probe_basic?" --no-wrap --ok-label="QTPYVCP" --cancel-label="BOTH"
-INSTALL_BOTH=$?
+if zenity --question --text="Install qtpyvcp only, or qtpyvcp + probe_basic?" --no-wrap --ok-label="QTPYVCP" --cancel-label="BOTH"; then
+  INSTALL_BOTH=0
+else
+  INSTALL_BOTH=1
+fi
 
 mkdir -p "$HOME/dev"
 cd "$HOME/dev"
