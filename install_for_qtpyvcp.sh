@@ -29,7 +29,7 @@ fi
 echo -e "\e[1;34mDebian Trixie dependencies install started\e[0m"
 
 sudo -A apt update
-sudo -A apt install -y python3-venv python3-pip python3-pybind11 python3-hiyapyco python3-dev python3-setuptools python3-wheel python3-six python3-docopt python3-qtpy python3-pyudev python3-psutil python3-markupsafe python3-opengl python3-vtk9 python3-pyqtgraph python3-simpleeval python3-jinja2 python3-deepdiff python3-sqlalchemy python3-yaml python3-distro python3-serial pybind11-dev cmake build-essential git zenity qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools qml6-module-qtquick-controls qml6-module-qtquick-shapes qml6-module-qtmultimedia gstreamer1.0-plugins-bad libqt6multimedia6 pyside6-tools python3-pyside6.qtcore python3-pyside6.qtdbus python3-pyside6.qtopengl python3-pyside6.qtwidgets python3-pyside6.qtmultimedia python3-pyside6.qtquick
+sudo -A apt install -y python3-venv python3-pip python3-pybind11 python3-hiyapyco python3-dev python3-setuptools python3-wheel python3-six python3-docopt python3-qtpy python3-pyudev python3-psutil python3-markupsafe python3-opengl python3-vtk9 python3-pyqtgraph python3-simpleeval python3-jinja2 python3-deepdiff python3-sqlalchemy python3-yaml python3-distro python3-serial pybind11-dev cmake build-essential git zenity curl qt6-base-dev qt6-tools-dev qt6-tools-dev-tools qt6-l10n-tools qml6-module-qtquick-controls qml6-module-qtquick-shapes qml6-module-qtmultimedia gstreamer1.0-plugins-bad libqt6multimedia6 pyside6-tools python3-pyside6.qtcore python3-pyside6.qtdbus python3-pyside6.qtopengl python3-pyside6.qtwidgets python3-pyside6.qtmultimedia python3-pyside6.qtquick
 SUDO_ERROR=$?
 
 if [ $SUDO_ERROR -eq 1 ]
@@ -58,13 +58,15 @@ then
 
     if [ $INSTALL_LINUXCNC -eq 0 ]
     then
-        sudo -A apt update
-        if ! sudo -A apt install -y linuxcnc-uspace
+        LINUXCNC_INSTALLER=$(mktemp /tmp/linuxcnc-install.XXXXXX.sh)
+        if ! curl -fsSL https://www.linuxcnc.org/linuxcnc-install.sh -o "$LINUXCNC_INSTALLER" || ! chmod +x "$LINUXCNC_INSTALLER" || ! sudo -A "$LINUXCNC_INSTALLER"
         then
+            rm -f "$LINUXCNC_INSTALLER"
             echo "Unable to install linuxcnc-uspace automatically."
             echo "Install LinuxCNC manually, then rerun this installer."
             exit 1
         fi
+        rm -f "$LINUXCNC_INSTALLER"
     else
         echo "LinuxCNC installation was skipped."
         echo "Install LinuxCNC system-wide, then rerun this installer."

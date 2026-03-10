@@ -6,6 +6,8 @@ DEV_DIR="$HOME/Dev"
 VENV_PATH="$DEV_DIR/venv"
 QTPYVCP_DIR="$DEV_DIR/qtpyvcp"
 PROBE_BASIC_DIR="$DEV_DIR/probe_basic"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
 
 if [ ! -d "$VENV_PATH" ]; then
   echo "[qtpyvcp-trixie-installer] Missing virtualenv at $VENV_PATH"
@@ -31,6 +33,38 @@ update_repo_branch() {
   git pull --ff-only origin "$TARGET_BRANCH"
 }
 
+maybe_update_linuxcnc() {
+  local update_linuxcnc=1
+  local linuxcnc_installer
+
+  if command -v zenity >/dev/null 2>&1; then
+    if zenity --question --text="Check and update LinuxCNC from linuxcnc.org repository now?" --no-wrap --ok-label="UPDATE" --cancel-label="SKIP"; then
+      update_linuxcnc=0
+    fi
+  else
+    read -r -p "Check and update LinuxCNC now? [Y/n]: " REPLY
+    case "$REPLY" in
+      n|N) update_linuxcnc=1 ;;
+      *) update_linuxcnc=0 ;;
+    esac
+  fi
+
+  if [ $update_linuxcnc -eq 0 ]; then
+    if ! command -v curl >/dev/null 2>&1; then
+      echo "[qtpyvcp-trixie-installer] curl is required to update LinuxCNC"
+      return 1
+    fi
+
+    linuxcnc_installer=$(mktemp /tmp/linuxcnc-install.XXXXXX.sh)
+    if ! curl -fsSL https://www.linuxcnc.org/linuxcnc-install.sh -o "$linuxcnc_installer" || ! chmod +x "$linuxcnc_installer" || ! sudo -A "$linuxcnc_installer"; then
+      rm -f "$linuxcnc_installer"
+      echo "[qtpyvcp-trixie-installer] LinuxCNC update failed"
+      return 1
+    fi
+    rm -f "$linuxcnc_installer"
+  fi
+}
+
 if [ ! -d "$QTPYVCP_DIR/.git" ]; then
   echo "[qtpyvcp-trixie-installer] Missing qtpyvcp repo at $QTPYVCP_DIR"
   echo "Run ./install_for_qtpyvcp.sh first."
@@ -51,5 +85,7 @@ if [ -d "$PROBE_BASIC_DIR/.git" ]; then
   cd "$PROBE_BASIC_DIR"
   qcompile .
 fi
+
+maybe_update_linuxcnc
 
 echo "[qtpyvcp-trixie-installer] Update complete."
