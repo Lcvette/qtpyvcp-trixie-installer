@@ -206,13 +206,22 @@ then
     cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic ATC Mill Metric.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic ATC Mill Metric.desktop"
     cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic Rack ATC Mill.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Rack ATC Mill.desktop"
 
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Lathe.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Mill.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Mill.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Lathe.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ ATC\ Mill.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ ATC\ Mill\ Metric.desktop
-    sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Rack\ ATC\ Mill.desktop
+    for launcher in \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer for PB Lathe.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer for PB Mill.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Mill.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Lathe.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic ATC Mill.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic ATC Mill Metric.desktop" \
+        "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Rack ATC Mill.desktop"
+    do
+        [ -f "$launcher" ] || continue
+        # Replace explicit placeholder tokens and any hardcoded /home/<user>/(dev|Dev) paths.
+        sed -E -i \
+            -e "s#username#$USERNAME#g" \
+            -e "s#/home/[^/]+/[dD]ev#$DEV_DIR#g" \
+            "$launcher"
+    done
 
     mkdir -p /home/$USERNAME/.local/share/icons/
     mkdir -p /home/$USERNAME/.local/share/fonts/
