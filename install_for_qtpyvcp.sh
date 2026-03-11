@@ -5,6 +5,25 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
 USERNAME=$(whoami)
 
+# Resolve workspace path case consistently across machines.
+if [ -d "$HOME/Dev" ] && [ -d "$HOME/dev" ]; then
+    if [ -d "$HOME/Dev/venv" ]; then
+        DEV_DIR="$HOME/Dev"
+    elif [ -d "$HOME/dev/venv" ]; then
+        DEV_DIR="$HOME/dev"
+    else
+        DEV_DIR="$HOME/Dev"
+    fi
+elif [ -d "$HOME/Dev" ]; then
+    DEV_DIR="$HOME/Dev"
+elif [ -d "$HOME/dev" ]; then
+    DEV_DIR="$HOME/dev"
+else
+    DEV_DIR="$HOME/Dev"
+fi
+
+VENV_PATH="$DEV_DIR/venv"
+
 echo -e "\e[1;34m                                                                               \e[0m"
 echo -e "\e[1;34m               ___  ____ ____ ___  ____    ___  ____ ____ _ ____               \e[0m"
 echo -e "\e[1;34m               |__] |__/ |  | |__] |___    |__] |__| [__  | |                  \e[0m"
@@ -76,9 +95,9 @@ then
 fi
 
 ensure_dev_venv () {
-    if [ ! -d ~/dev/venv ]
+    if [ ! -d "$VENV_PATH" ]
     then
-        python3 -m venv --system-site-packages ~/dev/venv
+        python3 -m venv --system-site-packages "$VENV_PATH"
         VENV_ERROR=$?
 
         if [ $VENV_ERROR -ne 0 ]
@@ -90,17 +109,17 @@ ensure_dev_venv () {
                 sudo -A apt install -y python3-venv python3-pip
             fi
 
-            python3 -m venv --system-site-packages ~/dev/venv
+            python3 -m venv --system-site-packages "$VENV_PATH"
         fi
     fi
 
-    if [ ! -f ~/dev/venv/bin/activate ]
+    if [ ! -f "$VENV_PATH/bin/activate" ]
     then
-        echo "Virtual environment setup failed: ~/dev/venv/bin/activate not found"
+        echo "Virtual environment setup failed: $VENV_PATH/bin/activate not found"
         exit 1
     fi
 
-    source ~/dev/venv/bin/activate
+    source "$VENV_PATH/bin/activate"
 
     if ! command -v pip >/dev/null 2>&1
     then
@@ -109,7 +128,7 @@ ensure_dev_venv () {
 
     if ! command -v pip >/dev/null 2>&1
     then
-        echo "pip is still unavailable in ~/dev/venv after setup"
+        echo "pip is still unavailable in $VENV_PATH after setup"
         exit 1
     fi
 }
@@ -122,29 +141,29 @@ if [ $BOTH -eq 1 ]
 then
     echo -e "\e[1;34mQtPyVCP and Probe Basic install started\e[0m"
 
-    mkdir -p ~/dev
-    cd ~/dev
+    mkdir -p "$DEV_DIR"
+    cd "$DEV_DIR"
 
-    if [ ! -d ~/dev/qtpyvcp/.git ]
+    if [ ! -d "$DEV_DIR/qtpyvcp/.git" ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
     else
-        cd ~/dev/qtpyvcp
+        cd "$DEV_DIR/qtpyvcp"
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd "$DEV_DIR"
     fi
 
-    if [ ! -d ~/dev/probe_basic/.git ]
+    if [ ! -d "$DEV_DIR/probe_basic/.git" ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/probe_basic.git
     else
-        cd ~/dev/probe_basic
+        cd "$DEV_DIR/probe_basic"
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd "$DEV_DIR"
     fi
 
     ensure_dev_venv
@@ -165,26 +184,27 @@ then
 
     qcompile .
     find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
+    rm -rf /tmp/qnative-build
     qnative --build-root /tmp/qnative-build
     cp scripts/.xsessionrc ~/
-    cp -r ~/dev/qtpyvcp/linuxcnc ~/ || true
+    cp -r "$DEV_DIR/qtpyvcp/linuxcnc" ~/ || true
 
     cd ../probe_basic
     pip install -e .
     qcompile .
 
     mkdir -p ~/linuxcnc/configs
-    cp -r ~/dev/probe_basic/configs/probe_basic/ ~/linuxcnc/configs/ || true
+    cp -r "$DEV_DIR/probe_basic/configs/probe_basic/" ~/linuxcnc/configs/ || true
 
     test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
 
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Designer\ for\ PB\ Lathe.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Lathe.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Designer\ for\ PB\ Mill.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Mill.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Probe\ Basic\ Mill.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Mill.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Probe\ Basic\ Lathe.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Lathe.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Probe\ Basic\ ATC\ Mill.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ ATC\ Mill.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Probe\ Basic\ ATC\ Mill\ Metric.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ ATC\ Mill\ Metric.desktop
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/Probe\ Basic\ Rack\ ATC\ Mill.desktop ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe\ Basic\ Rack\ ATC\ Mill.desktop
+    cp "$DEV_DIR/probe_basic/dev_launchers/Designer for PB Lathe.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer for PB Lathe.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Designer for PB Mill.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer for PB Mill.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic Mill.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Mill.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic Lathe.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Lathe.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic ATC Mill.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic ATC Mill.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic ATC Mill Metric.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic ATC Mill Metric.desktop"
+    cp "$DEV_DIR/probe_basic/dev_launchers/Probe Basic Rack ATC Mill.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Probe Basic Rack ATC Mill.desktop"
 
     sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Lathe.desktop
     sed -i "s/username/$USERNAME/g" ${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer\ for\ PB\ Mill.desktop
@@ -197,29 +217,29 @@ then
     mkdir -p /home/$USERNAME/.local/share/icons/
     mkdir -p /home/$USERNAME/.local/share/fonts/
 
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/probe_basic_icon.png /home/$USERNAME/.local/share/icons/probe_basic_mill.png
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/probe_basic_icon_lathe.png /home/$USERNAME/.local/share/icons/probe_basic_lathe.png
-    cp /home/$USERNAME/dev/probe_basic/dev_launchers/qtpyvcp2.png /home/$USERNAME/.local/share/icons/qtpyvcp.png
-    cp /home/$USERNAME/dev/probe_basic/fonts/BebasKai.ttf /home/$USERNAME/.local/share/fonts/BebasKai.ttf || true
+    cp "$DEV_DIR/probe_basic/dev_launchers/probe_basic_icon.png" "/home/$USERNAME/.local/share/icons/probe_basic_mill.png"
+    cp "$DEV_DIR/probe_basic/dev_launchers/probe_basic_icon_lathe.png" "/home/$USERNAME/.local/share/icons/probe_basic_lathe.png"
+    cp "$DEV_DIR/probe_basic/dev_launchers/qtpyvcp2.png" "/home/$USERNAME/.local/share/icons/qtpyvcp.png"
+    cp "$DEV_DIR/probe_basic/fonts/BebasKai.ttf" "/home/$USERNAME/.local/share/fonts/BebasKai.ttf" || true
 
-    if ! grep -q 'source ~/dev/venv/bin/activate' ~/.bashrc; then
-        echo "source ~/dev/venv/bin/activate" >> ~/.bashrc
+    if ! grep -q "source $VENV_PATH/bin/activate" ~/.bashrc; then
+        echo "source $VENV_PATH/bin/activate" >> ~/.bashrc
     fi
 
 else
     echo -e "\e[1;34mQtPyVCP install started\e[0m"
-    mkdir -p ~/dev
-    cd ~/dev
+    mkdir -p "$DEV_DIR"
+    cd "$DEV_DIR"
 
-    if [ ! -d ~/dev/qtpyvcp/.git ]
+    if [ ! -d "$DEV_DIR/qtpyvcp/.git" ]
     then
         git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
     else
-        cd ~/dev/qtpyvcp
+        cd "$DEV_DIR/qtpyvcp"
         git fetch origin
         git checkout pyside6
         git pull --ff-only origin pyside6
-        cd ~/dev
+        cd "$DEV_DIR"
     fi
 
     ensure_dev_venv
@@ -240,11 +260,12 @@ else
 
     qcompile .
     find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
+    rm -rf /tmp/qnative-build
     qnative --build-root /tmp/qnative-build
     cp scripts/.xsessionrc ~/
 
-    if ! grep -q 'source ~/dev/venv/bin/activate' ~/.bashrc; then
-        echo "source ~/dev/venv/bin/activate" >> ~/.bashrc
+    if ! grep -q "source $VENV_PATH/bin/activate" ~/.bashrc; then
+        echo "source $VENV_PATH/bin/activate" >> ~/.bashrc
     fi
 fi
 

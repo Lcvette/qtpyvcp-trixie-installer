@@ -2,7 +2,22 @@
 set -euo pipefail
 
 TARGET_BRANCH="pyside6"
-DEV_DIR="$HOME/dev"
+if [ -d "$HOME/Dev" ] && [ -d "$HOME/dev" ]; then
+  if [ -d "$HOME/Dev/venv" ]; then
+    DEV_DIR="$HOME/Dev"
+  elif [ -d "$HOME/dev/venv" ]; then
+    DEV_DIR="$HOME/dev"
+  else
+    DEV_DIR="$HOME/Dev"
+  fi
+elif [ -d "$HOME/Dev" ]; then
+  DEV_DIR="$HOME/Dev"
+elif [ -d "$HOME/dev" ]; then
+  DEV_DIR="$HOME/dev"
+else
+  DEV_DIR="$HOME/Dev"
+fi
+
 VENV_PATH="$DEV_DIR/venv"
 QTPYVCP_DIR="$DEV_DIR/qtpyvcp"
 PROBE_BASIC_DIR="$DEV_DIR/probe_basic"
@@ -117,6 +132,7 @@ qcompile .
 
 # Remove stale native artifacts before rebuilding to avoid mixed-arch leftovers.
 find src/qtpyvcp/native -type f \( -name "*_backplot_cpp*.so" -o -name "*gcodeeditorplugin*.so" \) -delete || true
+rm -rf /tmp/qnative-build
 qnative --build-root /tmp/qnative-build
 
 if [ -d "$PROBE_BASIC_DIR/.git" ]; then
