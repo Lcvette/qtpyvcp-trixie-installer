@@ -2,7 +2,7 @@
 set -euo pipefail
 
 TARGET_BRANCH="pyside6"
-DEV_DIR="$HOME/Dev"
+DEV_DIR="$HOME/dev"
 VENV_PATH="$DEV_DIR/venv"
 QTPYVCP_DIR="$DEV_DIR/qtpyvcp"
 PROBE_BASIC_DIR="$DEV_DIR/probe_basic"

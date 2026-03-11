@@ -3,7 +3,7 @@
 ## General installation approach
 
 This installer script sets up QtPyVCP and optional Probe Basic on Debian Trixie using the `pyside6` branches.
-It installs into a virtual environment at `~/Dev/venv` and keeps sources in `~/Dev`.
+It installs into a virtual environment at `~/dev/venv` and keeps sources in `~/dev`.
 
 ## Installation steps
 
@@ -12,12 +12,12 @@ It installs into a virtual environment at `~/Dev/venv` and keeps sources in `~/D
 The installer checks this and can offer to install `linuxcnc-uspace` if missing.
 If LinuxCNC installation is skipped or fails, the installer exits.
 
-**2. Create Dev directory and Clone the installer repo.**
+**2. Create dev directory and Clone the installer repo.**
 
 ```bash
 cd ~
-mkdir -p Dev
-cd Dev
+mkdir -p dev
+cd dev
 git clone https://github.com/Lcvette/qtpyvcp-trixie-installer.git
 cd qtpyvcp-trixie-installer
 ```
@@ -32,7 +32,7 @@ What the installer does:
 - Installs required dependencies for Trixie/PySide6
 - Bootstraps `git` and `zenity` if needed
 - Clones or updates `qtpyvcp` and optional `probe_basic` on `pyside6`
-- Creates `~/Dev/venv` with recovery for missing `pythonX.Y-venv`
+- Creates `~/dev/venv` with recovery for missing `pythonX.Y-venv`
 - Installs editable packages and runs `qcompile` and `qnative`
 
 ## Updating
@@ -51,7 +51,7 @@ Script helper documentation is maintained in `scripts/README.md`.
 
 ## Uninstall
 
-This is a local dev-style install. Remove the `~/Dev` workspace to remove the environment and cloned sources.
+This is a local dev-style install. Remove the `~/dev` workspace to remove the environment and cloned sources.
 
 ## Notes
 
