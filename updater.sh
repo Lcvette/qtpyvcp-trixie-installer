@@ -24,6 +24,15 @@ PROBE_BASIC_DIR="$DEV_DIR/probe_basic"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SUDO_ASKPASS="$SCRIPT_DIR/sudo_helper.sh"
 
+disable_linuxcnc_source_repo() {
+  local list_file="/etc/apt/sources.list.d/linuxcnc.list"
+
+  # Keep LinuxCNC binary-only repo to avoid source index warning noise.
+  if [ -f "$list_file" ]; then
+    sudo -A sed -i '/linuxcnc\.org/ s/^[[:space:]]*deb-src[[:space:]]\+/# deb-src /' "$list_file" || true
+  fi
+}
+
 if [ ! -d "$VENV_PATH" ]; then
   echo "[qtpyvcp-trixie-installer] Missing virtualenv at $VENV_PATH"
   echo "Run ./install_for_qtpyvcp.sh first."
@@ -77,6 +86,7 @@ maybe_update_linuxcnc() {
       return 1
     fi
     rm -f "$linuxcnc_installer"
+    disable_linuxcnc_source_repo
   fi
 }
 
@@ -112,6 +122,7 @@ maybe_sync_deps() {
   fi
 
   if [ $sync_deps -eq 0 ]; then
+    disable_linuxcnc_source_repo
     sudo -A apt update
     sudo -A apt install -y "${missing_pkgs[@]}"
   else
@@ -124,6 +135,8 @@ if [ ! -d "$QTPYVCP_DIR/.git" ]; then
   echo "Run ./install_for_qtpyvcp.sh first."
   exit 1
 fi
+
+disable_linuxcnc_source_repo
 
 update_repo_branch "$QTPYVCP_DIR"
 
