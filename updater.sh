@@ -65,6 +65,45 @@ maybe_update_linuxcnc() {
   fi
 }
 
+maybe_sync_deps() {
+  local missing_pkgs=()
+  local sync_deps=1
+  local pkg
+
+  # Minimal runtime and diagnostics packages observed as needed in field validation.
+  for pkg in python3-pyside6.qtuitools python3-pyside6.qtdesigner qml6-module-qtquick-layouts mesa-utils rt-tests; do
+    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+      missing_pkgs+=("$pkg")
+    fi
+  done
+
+  if [ ${#missing_pkgs[@]} -eq 0 ]; then
+    echo "[qtpyvcp-trixie-installer] Dependency baseline already satisfied."
+    return 0
+  fi
+
+  echo "[qtpyvcp-trixie-installer] Missing dependency packages: ${missing_pkgs[*]}"
+
+  if command -v zenity >/dev/null 2>&1; then
+    if zenity --question --text="Install missing dependency packages now?\n\n${missing_pkgs[*]}" --no-wrap --ok-label="INSTALL" --cancel-label="SKIP"; then
+      sync_deps=0
+    fi
+  else
+    read -r -p "Install missing dependency packages now? [Y/n]: " REPLY
+    case "$REPLY" in
+      n|N) sync_deps=1 ;;
+      *) sync_deps=0 ;;
+    esac
+  fi
+
+  if [ $sync_deps -eq 0 ]; then
+    sudo -A apt update
+    sudo -A apt install -y "${missing_pkgs[@]}"
+  else
+    echo "[qtpyvcp-trixie-installer] Skipping dependency sync."
+  fi
+}
+
 if [ ! -d "$QTPYVCP_DIR/.git" ]; then
   echo "[qtpyvcp-trixie-installer] Missing qtpyvcp repo at $QTPYVCP_DIR"
   echo "Run ./install_for_qtpyvcp.sh first."
@@ -86,6 +125,7 @@ if [ -d "$PROBE_BASIC_DIR/.git" ]; then
   qcompile .
 fi
 
+maybe_sync_deps
 maybe_update_linuxcnc
 
 echo "[qtpyvcp-trixie-installer] Update complete."

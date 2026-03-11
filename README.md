@@ -45,6 +45,10 @@ From the installer repo directory:
 
 This updates repositories, recompiles resources, and refreshes native modules.
 
+## Preflight and Validation
+
+Script helper documentation is maintained in `scripts/README.md`.
+
 ## Uninstall
 
 This is a local dev-style install. Remove the `~/Dev` workspace to remove the environment and cloned sources.
@@ -53,4 +57,4 @@ This is a local dev-style install. Remove the `~/Dev` workspace to remove the en
 
 - Branch pinning is intentional: `qtpyvcp` and `probe_basic` use `pyside6`.
 - If you switch machines/architectures or reuse old trees, rerun `./updater.sh`.
-- Scripts expected in this repo: `install_for_qtpyvcp.sh`, `updater.sh`, `sudo_helper.sh`.
+- Scripts expected in this repo: `install_for_qtpyvcp.sh`, `updater.sh`, `sudo_helper.sh`, `scripts/pi5_preflight.sh`, `scripts/pi5_validate.sh`.
