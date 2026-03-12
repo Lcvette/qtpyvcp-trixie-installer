@@ -145,6 +145,34 @@ ensure_dev_venv () {
     fi
 }
 
+sync_repo_full_tree () {
+    local repo_dir="$1"
+    local repo_url="$2"
+    local repo_branch="$3"
+
+    if [ ! -d "$repo_dir/.git" ]
+    then
+        # Clone full repository tree/history while still checking out the requested branch.
+        git clone -b "$repo_branch" "$repo_url" "$repo_dir"
+    else
+        (
+            cd "$repo_dir" || exit 1
+            git remote set-url origin "$repo_url"
+            git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+            git remote set-branches origin '*'
+            git fetch --all --tags --prune
+
+            if [ -f .git/shallow ]
+            then
+                git fetch --unshallow --tags origin
+            fi
+
+            git checkout "$repo_branch"
+            git pull --ff-only origin "$repo_branch"
+        )
+    fi
+}
+
 zenity --question --text="Install qtpyvcp or qtpyvcp and probe basic" --no-wrap --ok-label="QTPYVCP" --cancel-label="BOTH"
 
 BOTH=$?
@@ -156,27 +184,9 @@ then
     mkdir -p "$DEV_DIR"
     cd "$DEV_DIR"
 
-    if [ ! -d "$DEV_DIR/qtpyvcp/.git" ]
-    then
-        git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
-    else
-        cd "$DEV_DIR/qtpyvcp"
-        git fetch origin
-        git checkout pyside6
-        git pull --ff-only origin pyside6
-        cd "$DEV_DIR"
-    fi
+    sync_repo_full_tree "$DEV_DIR/qtpyvcp" "https://github.com/kcjengr/qtpyvcp.git" "pyside6"
 
-    if [ ! -d "$DEV_DIR/probe_basic/.git" ]
-    then
-        git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/probe_basic.git
-    else
-        cd "$DEV_DIR/probe_basic"
-        git fetch origin
-        git checkout pyside6
-        git pull --ff-only origin pyside6
-        cd "$DEV_DIR"
-    fi
+    sync_repo_full_tree "$DEV_DIR/probe_basic" "https://github.com/kcjengr/probe_basic.git" "pyside6"
 
     ensure_dev_venv
 
@@ -252,16 +262,7 @@ else
     mkdir -p "$DEV_DIR"
     cd "$DEV_DIR"
 
-    if [ ! -d "$DEV_DIR/qtpyvcp/.git" ]
-    then
-        git clone -b pyside6 --single-branch --depth 1 https://github.com/kcjengr/qtpyvcp.git
-    else
-        cd "$DEV_DIR/qtpyvcp"
-        git fetch origin
-        git checkout pyside6
-        git pull --ff-only origin pyside6
-        cd "$DEV_DIR"
-    fi
+    sync_repo_full_tree "$DEV_DIR/qtpyvcp" "https://github.com/kcjengr/qtpyvcp.git" "pyside6"
 
     ensure_dev_venv
 

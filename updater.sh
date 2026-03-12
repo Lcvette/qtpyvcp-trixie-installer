@@ -52,7 +52,15 @@ update_repo_branch() {
 
   echo "[qtpyvcp-trixie-installer] Updating $(basename "$repo_dir") on branch $TARGET_BRANCH"
   cd "$repo_dir"
-  git fetch origin
+  # Ensure full remote branch visibility and upgrade shallow clones when needed.
+  git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+  git remote set-branches origin '*'
+  git fetch --all --tags --prune
+
+  if [ -f .git/shallow ]; then
+    git fetch --unshallow --tags origin
+  fi
+
   git checkout "$TARGET_BRANCH"
   git pull --ff-only origin "$TARGET_BRANCH"
 }
