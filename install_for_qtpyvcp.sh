@@ -34,6 +34,68 @@ disable_linuxcnc_source_repo () {
     fi
 }
 
+check_conflicting_system_installs () {
+    local -a conflicting_packages=()
+    local package_list
+    local prompt_remove=1
+
+    package_list=$(dpkg-query -W -f='${Package}\t${Status}\n' '*qtpyvcp*' '*probe-basic*' '*probebasic*' 2>/dev/null | awk '$2 == "install" && $3 == "ok" && $4 == "installed" {print $1}')
+
+    if [ -n "$package_list" ]
+    then
+        while IFS= read -r pkg
+        do
+            [ -n "$pkg" ] && conflicting_packages+=("$pkg")
+        done <<< "$package_list"
+    fi
+
+    if [ ${#conflicting_packages[@]} -eq 0 ]
+    then
+        return 0
+    fi
+
+    local package_text
+    package_text=$(printf '%s\n' "${conflicting_packages[@]}")
+
+    echo "Detected system-wide qtpyvcp/Probe Basic packages that can conflict with the development install:"
+    echo "$package_text"
+
+    local prompt_message
+    prompt_message="System-wide qtpyvcp or Probe Basic packages were detected and can conflict with this development installer.\n\nRemove these packages now and continue?\n\nDetected packages:\n$package_text"
+
+    if command -v zenity >/dev/null 2>&1
+    then
+        if zenity --question --title="Conflicting Packages Detected" --no-wrap --ok-label="REMOVE AND CONTINUE" --cancel-label="ABORT INSTALLER" --text="$prompt_message"
+        then
+            prompt_remove=0
+        fi
+    else
+        echo
+        echo "This installer requires removing the above apt/dpkg packages before continuing."
+        read -r -p "Remove detected packages now? [Y/n]: " REPLY
+        case "$REPLY" in
+            n|N) prompt_remove=1 ;;
+            *) prompt_remove=0 ;;
+        esac
+    fi
+
+    if [ $prompt_remove -ne 0 ]
+    then
+        echo "Installer aborted. Remove system-wide qtpyvcp/Probe Basic packages and rerun this script."
+        exit 1
+    fi
+
+    echo "Removing conflicting packages..."
+    if ! sudo -A apt purge -y "${conflicting_packages[@]}"
+    then
+        echo "Failed to remove one or more conflicting packages."
+        echo "Please remove them manually, then rerun this installer."
+        exit 1
+    fi
+
+    sudo -A apt autoremove -y || true
+}
+
 echo -e "\e[1;34m                                                                               \e[0m"
 echo -e "\e[1;34m               ___  ____ ____ ___  ____    ___  ____ ____ _ ____               \e[0m"
 echo -e "\e[1;34m               |__] |__/ |  | |__] |___    |__] |__| [__  | |                  \e[0m"
@@ -54,6 +116,8 @@ then
     sudo apt update
     sudo apt install -y zenity git
 fi
+
+check_conflicting_system_installs
 
 echo -e "\e[1;34mDebian Trixie dependencies install started\e[0m"
 
@@ -251,7 +315,10 @@ then
     cp "$DEV_DIR/probe_basic/dev_launchers/probe_basic_icon.png" "/home/$USERNAME/.local/share/icons/probe_basic_mill.png"
     cp "$DEV_DIR/probe_basic/dev_launchers/probe_basic_icon_lathe.png" "/home/$USERNAME/.local/share/icons/probe_basic_lathe.png"
     cp "$DEV_DIR/probe_basic/dev_launchers/qtpyvcp2.png" "/home/$USERNAME/.local/share/icons/qtpyvcp.png"
-    cp "$DEV_DIR/probe_basic/fonts/BebasKai.ttf" "/home/$USERNAME/.local/share/fonts/BebasKai.ttf" || true
+    cp "$DEV_DIR/probe_basic/fonts/ProbeBasicBebasMono.ttf" "/home/$USERNAME/.local/share/fonts/ProbeBasicBebasMono.ttf" || true
+    cp "$DEV_DIR/probe_basic/fonts/OFL-1.1.txt" "/home/$USERNAME/.local/share/fonts/ProbeBasicBebasMono-OFL-1.1.txt" || true
+    cp "$DEV_DIR/probe_basic/fonts/ProbeBasicBebasMono-LICENSE.txt" "/home/$USERNAME/.local/share/fonts/ProbeBasicBebasMono-LICENSE.txt" || true
+    cp "$DEV_DIR/probe_basic/fonts/ProbeBasicBebasMono-MODIFICATIONS.txt" "/home/$USERNAME/.local/share/fonts/ProbeBasicBebasMono-MODIFICATIONS.txt" || true
 
     if ! grep -q "source $VENV_PATH/bin/activate" ~/.bashrc; then
         echo "source $VENV_PATH/bin/activate" >> ~/.bashrc
