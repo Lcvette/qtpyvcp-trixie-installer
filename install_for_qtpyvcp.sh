@@ -282,6 +282,16 @@ then
     mkdir -p ~/linuxcnc/configs
     cp -r "$DEV_DIR/probe_basic/configs/probe_basic/" ~/linuxcnc/configs/ || true
 
+    # The copied .ui files point at their .qrc resource by a path relative
+    # to a full checkout (../../../../src/probe_basic/probe_basic.qrc).
+    # Once copied out to ~/linuxcnc/configs there is no src/ tree nearby,
+    # so Designer can't resolve it and prompts to locate it by hand.
+    QRC_MILL=$(python3 -c "import os, probe_basic; print(os.path.join(os.path.dirname(probe_basic.__file__), 'probe_basic.qrc'))" 2>/dev/null || true)
+    if [ -n "$QRC_MILL" ] && [ -f "$QRC_MILL" ]; then
+        find ~/linuxcnc/configs/probe_basic -name '*.ui' -print0 \
+            | xargs -0 -r sed -i "s|\.\./\.\./\.\./\.\./src/probe_basic/probe_basic\.qrc|$QRC_MILL|g"
+    fi
+
     test -f ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs && source ${XDG_CONFIG_HOME:-~/.config}/user-dirs.dirs
 
     cp "$DEV_DIR/probe_basic/dev_launchers/Designer for PB Lathe.desktop" "${XDG_DESKTOP_DIR:-$HOME/Desktop}/Designer for PB Lathe.desktop"
